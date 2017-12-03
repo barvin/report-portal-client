@@ -16,3 +16,9 @@ dependencies {
     compile 'com.epam.reportportal:commons-model:3.3.0'
     testCompile 'org.testng:testng:6.11'
 }
+
+test {
+    useTestNG()
+    include '**/*.class'
+    systemProperties System.properties
+}
