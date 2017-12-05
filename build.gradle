@@ -1,13 +1,45 @@
+plugins {
+    id "com.jfrog.bintray" version "1.7.3"
+}
+
 group 'org.qatools'
 version '1.0.0'
 
 apply plugin: 'java'
+apply plugin: 'java-library'
+apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.8
 
 repositories {
     jcenter()
-    maven { url 'http://dl.bintray.com/epam/reportportal' }
+}
+
+publishing {
+    publications {
+        RpClientPublication(MavenPublication) {
+            from components.java
+            groupId group
+            artifactId project.name
+            version '1.0.0'
+        }
+    }
+}
+
+bintray {
+    user = project.hasProperty('user') ? project.property('user') : ''
+    key = project.hasProperty('key') ? project.property('key') : ''
+    publications = ['RpClientPublication']
+    pkg {
+        repo = 'qatools'
+        name = project.name
+        version {
+            name = '1.0.0'
+            desc = 'Report Portal client 1.0.0'
+            released  = new Date()
+            vcsTag = 'v1.0.0'
+        }
+    }
 }
 
 dependencies {
@@ -20,5 +52,4 @@ dependencies {
 test {
     useTestNG()
     include '**/*.class'
-    systemProperties System.properties
 }
