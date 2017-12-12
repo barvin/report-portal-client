@@ -17,6 +17,8 @@
  */
 package org.qatools.rp;
 
+import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -32,26 +34,33 @@ import com.epam.ta.reportportal.ws.model.TestItemResource;
 import com.epam.ta.reportportal.ws.model.launch.LaunchResource;
 import com.epam.ta.reportportal.ws.model.launch.StartLaunchRQ;
 import com.epam.ta.reportportal.ws.model.log.SaveLogRQ;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import feign.Feign;
-import feign.Logger;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class ReportPortalClient {
 
     private String projectName;
     private String accessToken;
     private ReportPortal reportPortal;
+    private final String baseApiUrl;
+    private static final MediaType OCTET_STREAM = MediaType.parse("application/octet-stream");
+    private static final MediaType JSON = MediaType.parse("application/json");
 
     public ReportPortalClient(String baseUrl, String projectName, String accessToken) {
         this.projectName = projectName;
         this.accessToken = accessToken;
-
-        String baseApiUrl = (baseUrl.endsWith("/")) ? baseUrl + "api/v1" : baseUrl + "/api/v1";
+        this.baseApiUrl = (baseUrl.endsWith("/")) ? baseUrl + "api/v1" : baseUrl + "/api/v1";
         this.reportPortal = Feign.builder().encoder(new JacksonEncoder()).decoder(new JacksonDecoder())
-                .errorDecoder(new ReportPortalErrorDecoder()).logger(new Logger.JavaLogger().appendToFile("pr.log"))
-                .logLevel(Logger.Level.FULL).target(ReportPortal.class, baseApiUrl);
+                .errorDecoder(new ReportPortalErrorDecoder()).target(ReportPortal.class, baseApiUrl);
     }
 
     public String startLaunch(StartLaunchRQ rq) throws ReportPortalClientException {
@@ -89,6 +98,35 @@ public class ReportPortalClient {
     }
 
     public void log(SaveLogRQ rq) throws ReportPortalClientException {
-        reportPortal.log(accessToken, projectName, rq);
+        if (rq.getFile() == null) {
+            reportPortal.log(accessToken, projectName, rq);
+        } else {
+            try {
+                String jsonPart = new ObjectMapper().writeValueAsString(Collections.singletonList(rq));
+                RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                        .addFormDataPart("json_request_part", "", RequestBody.create(JSON, jsonPart))
+                        .addFormDataPart("binary_part", rq.getFile().getName(),
+                                RequestBody.create(getMediaType(rq), rq.getFile().getContent()))
+                        .build();
+
+                Request request = new Request.Builder().header("Authorization", "bearer " + accessToken)
+                        .url(baseApiUrl + "/" + projectName + "/log").post(requestBody).build();
+
+                Response response = new OkHttpClient().newCall(request).execute();
+                if (!response.isSuccessful()) {
+                    throw new ReportPortalClientException(response.body().string());
+                }
+            } catch (IOException e) {
+                throw new ReportPortalClientException(e);
+            }
+        }
+
+    }
+
+    private MediaType getMediaType(SaveLogRQ rq) {
+        if (rq.getFile().getContentType() == null || MediaType.parse(rq.getFile().getContentType()) == null) {
+            return OCTET_STREAM;
+        }
+        return MediaType.parse(rq.getFile().getContentType());
     }
 }

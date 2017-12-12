@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'org.qatools'
-version '1.0.0'
+version '1.1.0'
 
 apply plugin: 'java'
 apply plugin: 'java-library'
@@ -21,7 +21,7 @@ publishing {
             from components.java
             groupId group
             artifactId project.name
-            version '1.0.0'
+            version '1.1.0'
         }
     }
 }
@@ -34,10 +34,10 @@ bintray {
         repo = 'qatools'
         name = project.name
         version {
-            name = '1.0.0'
-            desc = 'Report Portal client 1.0.0'
+            name = '1.1.0'
+            desc = 'Report Portal client 1.1.0'
             released  = new Date()
-            vcsTag = 'v1.0.0'
+            vcsTag = 'v1.1.0'
         }
     }
 }
@@ -45,7 +45,9 @@ bintray {
 dependencies {
     compile 'io.github.openfeign:feign-core:9.5.1'
     compile 'io.github.openfeign:feign-jackson:9.5.1'
+    compile 'io.github.openfeign:feign-okhttp:9.5.1'
     compile 'com.epam.reportportal:commons-model:3.3.0'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.9.3'
     testCompile 'org.testng:testng:6.11'
 }
 

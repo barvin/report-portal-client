@@ -17,6 +17,7 @@
  */
 package org.qatools.rp;
 
+import java.util.List;
 import java.util.Map;
 
 import org.qatools.rp.dto.PagedList;
@@ -76,5 +77,10 @@ public interface ReportPortal {
     @RequestLine("POST /{projectName}/log")
     @Headers({ "Content-Type: application/json", "Authorization: bearer {token}" })
     EntryCreatedRS log(@Param("token") String token, @Param("projectName") String projectName, SaveLogRQ rq);
+
+    @RequestLine("POST /{projectName}/log")
+    @Headers({ "Content-Type: multipart/form-data", "Authorization: bearer {token}" })
+    void log(@Param("token") String token, @Param("projectName") String projectName,
+            @Param("json_request_part") List<SaveLogRQ> rqs, @Param("binary_part") byte[] file);
 
 }

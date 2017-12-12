@@ -23,4 +23,8 @@ public class ReportPortalClientException extends IOException {
     public ReportPortalClientException(Throwable cause) {
         super(cause);
     }
+
+    public ReportPortalClientException(String message) {
+        super(message);
+    }
 }
