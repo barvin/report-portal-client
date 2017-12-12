@@ -28,7 +28,7 @@ public class LaunchTests {
 
     @BeforeClass
     public void beforeClass() {
-        rpClient = new ReportPortalClient("https://rp.epam.com", "maksym_barvinskyi_personal","3f782fc7-2fa4-4a91-ad20-a5d5bb461ba5");
+        rpClient = new ReportPortalClient("", "","");
     }
 
     @Test
