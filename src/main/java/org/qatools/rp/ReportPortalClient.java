@@ -37,6 +37,7 @@ import com.epam.ta.reportportal.ws.model.log.SaveLogRQ;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import feign.Feign;
+import feign.Retryer;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import okhttp3.MediaType;
@@ -56,11 +57,16 @@ public class ReportPortalClient {
     private static final MediaType JSON = MediaType.parse("application/json");
 
     public ReportPortalClient(String baseUrl, String projectName, String accessToken) {
+        this(baseUrl, projectName, accessToken, new RetryInfo(1000, 5000, 5));
+    }
+
+    public ReportPortalClient(String baseUrl, String projectName, String accessToken, RetryInfo retry) {
         this.projectName = projectName;
         this.accessToken = accessToken;
         this.baseApiUrl = (baseUrl.endsWith("/")) ? baseUrl + "api/v1" : baseUrl + "/api/v1";
+        Retryer retryer = new Retryer.Default(retry.getPeriod(), retry.getMaxPeriod(), retry.getMaxAttempts());
         this.reportPortal = Feign.builder().encoder(new JacksonEncoder()).decoder(new JacksonDecoder())
-                .errorDecoder(new ReportPortalErrorDecoder()).target(ReportPortal.class, baseApiUrl);
+                .errorDecoder(new ReportPortalErrorDecoder()).retryer(retryer).target(ReportPortal.class, baseApiUrl);
     }
 
     public String startLaunch(StartLaunchRQ rq) throws ReportPortalClientException {
