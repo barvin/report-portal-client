@@ -2,6 +2,8 @@ package org.qatools.rp.tests;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,6 +12,10 @@ import java.util.Map;
 
 import org.qatools.rp.ReportPortalClient;
 import org.qatools.rp.exceptions.ReportPortalClientException;
+import org.qatools.rp.message.HashMarkSeparatedMessageParser;
+import org.qatools.rp.message.MessageParser;
+import org.qatools.rp.message.ReportPortalMessage;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -28,7 +34,7 @@ public class LaunchTests {
 
     @BeforeClass
     public void beforeClass() {
-        rpClient = new ReportPortalClient("", "","");
+        rpClient = new ReportPortalClient("", "", "");
     }
 
     @Test
@@ -37,7 +43,7 @@ public class LaunchTests {
         String suiteItemId = startSuite(launchId);
         String testItemId = startTestItem(launchId, suiteItemId);
         logMessage();
-        logMessageFile(testItemId);
+        logMessageFileDirectly(testItemId);
         finishTestItem(testItemId);
         finishTestItem(suiteItemId);
         finishLaunch(launchId);
@@ -54,7 +60,7 @@ public class LaunchTests {
         });
     }
 
-    private void logMessageFile(String testItemId) throws ReportPortalClientException {
+    private void logMessageFileDirectly(String testItemId) throws ReportPortalClientException {
         SaveLogRQ rq = new SaveLogRQ();
         rq.setMessage("Test log message with screen shot");
         rq.setLogTime(Calendar.getInstance().getTime());
@@ -125,5 +131,17 @@ public class LaunchTests {
 
         LaunchResource launch = rpClient.getLaunch(launches.get(0).getLaunchId());
         assert launch.getLaunchId().equals(launches.get(0).getLaunchId());
+    }
+
+    @Test
+    public void testMessageParser() throws IOException, URISyntaxException {
+        MessageParser parser = new HashMarkSeparatedMessageParser();
+
+        String absPath = Paths.get(getClass().getClassLoader().getResource("screen_shot_1.png").toURI())
+                .toAbsolutePath().toString();
+        ReportPortalMessage message = parser.parse("RP_MESSAGE#FILE#" + absPath + "#demo test message######33");
+        Assert.assertEquals(message.getMessage(), "demo test message######33");
+        Assert.assertNotNull(message, "Message should not be null");
+        Assert.assertNotNull(message.getData(), "Binary data should not be null");
     }
 }
