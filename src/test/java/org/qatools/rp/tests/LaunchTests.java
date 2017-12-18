@@ -36,20 +36,22 @@ public class LaunchTests {
         String launchId = startLaunch();
         String suiteItemId = startSuite(launchId);
         String testItemId = startTestItem(launchId, suiteItemId);
-        logMessage(testItemId);
+        logMessage();
         logMessageFile(testItemId);
         finishTestItem(testItemId);
         finishTestItem(suiteItemId);
         finishLaunch(launchId);
     }
 
-    private void logMessage(String testItemId) throws ReportPortalClientException {
-        SaveLogRQ rq = new SaveLogRQ();
-        rq.setMessage("Test log message");
-        rq.setLogTime(Calendar.getInstance().getTime());
-        rq.setTestItemId(testItemId);
-        rq.setLevel("INFO");
-        rpClient.log(rq);
+    private void logMessage() {
+        ReportPortalClient.emitLog(itemId -> {
+            SaveLogRQ rq = new SaveLogRQ();
+            rq.setMessage("Test log message");
+            rq.setLogTime(Calendar.getInstance().getTime());
+            rq.setTestItemId(itemId);
+            rq.setLevel("INFO");
+            return rq;
+        });
     }
 
     private void logMessageFile(String testItemId) throws ReportPortalClientException {

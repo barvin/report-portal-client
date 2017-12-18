@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.qatools.rp.codec.ReportPortalErrorDecoder;
 import org.qatools.rp.exceptions.ReportPortalClientException;
@@ -96,10 +97,13 @@ public class ReportPortalClient {
 
     public EntryCreatedRS startTestItem(String parentItemId, StartTestItemRQ rq) throws ReportPortalClientException {
         String finalParentItemId = (parentItemId != null) ? "/" + parentItemId : "";
-        return reportPortal.startTestItems(accessToken, projectName, finalParentItemId, rq);
+        EntryCreatedRS result = reportPortal.startTestItems(accessToken, projectName, finalParentItemId, rq);
+        LoggingContext.init(result.getId(), this);
+        return result;
     }
 
     public OperationCompletionRS finishTestItem(String itemId, FinishTestItemRQ rq) throws ReportPortalClientException {
+        LoggingContext.complete();
         return reportPortal.finishTestItem(accessToken, projectName, itemId, rq);
     }
 
@@ -127,6 +131,20 @@ public class ReportPortalClient {
             }
         }
 
+    }
+
+    /**
+     * Emits log message if there is any active context attached to the current thread
+     *
+     * @param logSupplier Log supplier. Converts current Item ID to the {@link SaveLogRQ} object
+     */
+    public static boolean emitLog(Function<String, SaveLogRQ> logSupplier) {
+        final LoggingContext loggingContext = LoggingContext.THREAD_LOCAL_CONTEXT.get();
+        if (null != loggingContext) {
+            loggingContext.emit(logSupplier);
+            return true;
+        }
+        return false;
     }
 
     private MediaType getMediaType(SaveLogRQ rq) {
