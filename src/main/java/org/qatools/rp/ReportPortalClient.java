@@ -96,9 +96,16 @@ public class ReportPortalClient {
     }
 
     public EntryCreatedRS startTestItem(String parentItemId, StartTestItemRQ rq) throws ReportPortalClientException {
+        return startTestItem(parentItemId, rq, true);
+    }
+
+    public EntryCreatedRS startTestItem(String parentItemId, StartTestItemRQ rq, boolean allowLogging)
+            throws ReportPortalClientException {
         String finalParentItemId = (parentItemId != null) ? "/" + parentItemId : "";
-        EntryCreatedRS result = reportPortal.startTestItems(accessToken, projectName, finalParentItemId, rq);
-        LoggingContext.init(result.getId(), this);
+        EntryCreatedRS result = reportPortal.startTestItem(accessToken, projectName, finalParentItemId, rq);
+        if (allowLogging) {
+            LoggingContext.init(result.getId(), this);
+        }
         return result;
     }
 

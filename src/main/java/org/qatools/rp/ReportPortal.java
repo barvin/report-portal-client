@@ -66,7 +66,7 @@ public interface ReportPortal {
 
     @RequestLine("POST /{projectName}/item{parentItemId}")
     @Headers({ "Content-Type: application/json", "Authorization: bearer {token}" })
-    EntryCreatedRS startTestItems(@Param("token") String token, @Param("projectName") String projectName,
+    EntryCreatedRS startTestItem(@Param("token") String token, @Param("projectName") String projectName,
             @Param("parentItemId") String parentItemId, StartTestItemRQ rq);
 
     @RequestLine("PUT /{projectName}/item/{itemId}")
