@@ -95,8 +95,12 @@ public class ReportPortalClient {
         return startTestItem(null, rq);
     }
 
+    /**
+     * Starts test item on the Report Portal and do not send log messages to it.
+     * If you need the log to be published under the test item, use {@code startTestItem(parentItemId, rq, true)}
+     */
     public EntryCreatedRS startTestItem(String parentItemId, StartTestItemRQ rq) throws ReportPortalClientException {
-        return startTestItem(parentItemId, rq, true);
+        return startTestItem(parentItemId, rq, false);
     }
 
     public EntryCreatedRS startTestItem(String parentItemId, StartTestItemRQ rq, boolean allowLogging)
