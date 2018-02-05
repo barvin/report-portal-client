@@ -3,7 +3,6 @@ plugins {
 }
 
 group 'org.qatools'
-version '1.1.2'
 
 apply plugin: 'java'
 apply plugin: 'java-library'
@@ -21,7 +20,7 @@ publishing {
             from components.java
             groupId group
             artifactId project.name
-            version '1.1.2'
+            version releaseVersion
         }
     }
 }
@@ -34,10 +33,10 @@ bintray {
         repo = 'qatools'
         name = project.name
         version {
-            name = '1.1.2'
-            desc = 'Report Portal client 1.1.2'
+            name = releaseVersion
+            desc = 'Report Portal client '.concat(releaseVersion)
             released  = new Date()
-            vcsTag = 'v1.1.2'
+            vcsTag = 'v'.concat(releaseVersion)
         }
     }
 }
