@@ -3,6 +3,7 @@ plugins {
 }
 
 group 'org.qatools'
+version releaseVersion
 
 apply plugin: 'java'
 apply plugin: 'java-library'
