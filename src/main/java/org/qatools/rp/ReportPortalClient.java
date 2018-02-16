@@ -152,17 +152,7 @@ public class ReportPortalClient {
         return reportPortal.finishTestItem(accessToken, projectName, itemId, rq);
     }
 
-    public void log(SaveLogRQ rq) throws ReportPortalClientException {
-        if (rq.getFile() == null) {
-            executor.submit(() -> {
-                reportPortal.log(accessToken, projectName, rq);
-            });
-        } else {
-            log(Collections.singletonList(rq));
-        }
-    }
-
-    public void log(List<SaveLogRQ> rqs) throws ReportPortalClientException {
+    void log(List<SaveLogRQ> rqs) {
         Runnable task = () -> {
             try {
                 String jsonPart = new ObjectMapper().writeValueAsString(rqs);

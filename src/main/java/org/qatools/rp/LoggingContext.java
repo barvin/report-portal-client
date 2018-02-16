@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import com.epam.ta.reportportal.ws.model.log.SaveLogRQ;
 
 public class LoggingContext {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LoggingContext.class);
     static final ThreadLocal<LoggingContext> THREAD_LOCAL_CONTEXT = new ThreadLocal<>();
 
     /**
@@ -80,9 +79,7 @@ public class LoggingContext {
 
     private void sendLogAndEmptyBuffer() {
         try {
-            this.client.log(bufferedLog);
-        } catch (ReportPortalClientException e) {
-            LOGGER.error("Emit log failed.", e);
+            this.client.log(new ArrayList<>(bufferedLog));
         } finally {
             bufferedLog.clear();
         }

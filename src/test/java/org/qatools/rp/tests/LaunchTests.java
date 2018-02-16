@@ -34,7 +34,7 @@ public class LaunchTests {
 
     @BeforeClass
     public void beforeClass() {
-        rpClient = new ReportPortalClient("", "", "");
+        rpClient = new ReportPortalClient("https://rp.epam.com", "maksym_barvinskyi_personal", "3f782fc7-2fa4-4a91-ad20-a5d5bb461ba5");
     }
 
     @Test
@@ -43,7 +43,7 @@ public class LaunchTests {
         String suiteItemId = startSuite(launchId);
         String testItemId = startTestItem(launchId, suiteItemId);
         logMessage();
-        logMessageFileDirectly(testItemId);
+        logMessageFile(testItemId);
         finishTestItem(testItemId);
         finishTestItem(suiteItemId);
         finishLaunch(launchId);
@@ -60,23 +60,25 @@ public class LaunchTests {
         });
     }
 
-    private void logMessageFileDirectly(String testItemId) throws ReportPortalClientException {
-        SaveLogRQ rq = new SaveLogRQ();
-        rq.setMessage("Test log message with screen shot");
-        rq.setLogTime(Calendar.getInstance().getTime());
-        rq.setTestItemId(testItemId);
-        rq.setLevel("INFO");
-        SaveLogRQ.File file = new SaveLogRQ.File();
-        file.setName("screen_shot_1.png");
-        try {
-            InputStream fileStream = getClass().getClassLoader().getResourceAsStream("screen_shot_1.png");
-            byte[] fileContent = IOUtils.readFully(fileStream, -1, false);
-            file.setContent(fileContent);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        rq.setFile(file);
-        rpClient.log(rq);
+    private void logMessageFile(String testItemId) {
+        ReportPortalClient.emitLog(itemId -> {
+            SaveLogRQ rq = new SaveLogRQ();
+            rq.setMessage("Test log message with screen shot");
+            rq.setLogTime(Calendar.getInstance().getTime());
+            rq.setTestItemId(testItemId);
+            rq.setLevel("INFO");
+            SaveLogRQ.File file = new SaveLogRQ.File();
+            file.setName("screen_shot_1.png");
+            try {
+                InputStream fileStream = getClass().getClassLoader().getResourceAsStream("screen_shot_1.png");
+                byte[] fileContent = IOUtils.readFully(fileStream, -1, false);
+                file.setContent(fileContent);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            rq.setFile(file);
+            return rq;
+        });
     }
 
     private void finishTestItem(String itemId) throws ReportPortalClientException {
@@ -94,7 +96,7 @@ public class LaunchTests {
         rq.setStartTime(Calendar.getInstance().getTime());
         rq.setType("STEP");
         rq.setTags(Collections.singleton("qa_tools"));
-        return rpClient.startTestItem(suiteItemId, rq).getId();
+        return rpClient.startTestItem(suiteItemId, rq, true).getId();
     }
 
     private String startSuite(String launchId) throws ReportPortalClientException {
