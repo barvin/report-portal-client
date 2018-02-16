@@ -29,12 +29,7 @@ import com.epam.ta.reportportal.ws.model.log.SaveLogRQ;
 
 public class LoggingContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingContext.class);
-    private static final int DEFAULT_BUFFER_SIZE = 10;
     static final ThreadLocal<LoggingContext> THREAD_LOCAL_CONTEXT = new ThreadLocal<>();
-
-    public static LoggingContext init(String itemId, final ReportPortalClient client) {
-        return init(itemId, DEFAULT_BUFFER_SIZE, client);
-    }
 
     /**
      * Initializes new logging context and attaches it to current thread

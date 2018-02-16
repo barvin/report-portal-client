@@ -1,6 +1,6 @@
 /*
  *     Report Portal Client
- *     Copyright (C) 2017  Maksym Barvinskyi <maksym@mbarvinskyi.com>
+ *     Copyright (C) 2017 - 2018  Maksym Barvinskyi <maksym@mbarvinskyi.com>
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -21,10 +21,15 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.qatools.rp.codec.ReportPortalErrorDecoder;
 import org.qatools.rp.exceptions.ReportPortalClientException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.epam.ta.reportportal.ws.model.EntryCreatedRS;
 import com.epam.ta.reportportal.ws.model.FinishExecutionRQ;
@@ -54,20 +59,38 @@ public class ReportPortalClient {
     private String accessToken;
     private ReportPortal reportPortal;
     private final String baseApiUrl;
+    private final int bufferSize;
+    private final int logThreads;
     private static final MediaType OCTET_STREAM = MediaType.parse("application/octet-stream");
     private static final MediaType JSON = MediaType.parse("application/json");
+    private static final int DEFAULT_BUFFER_SIZE = 10;
+    private static final int DEFAULT_LOG_THREADS_COUNT = 1;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReportPortalClient.class);
+    private ExecutorService executor;
 
     public ReportPortalClient(String baseUrl, String projectName, String accessToken) {
-        this(baseUrl, projectName, accessToken, new RetryInfo(1000, 5000, 5));
+        this(baseUrl, projectName, accessToken, DEFAULT_BUFFER_SIZE, DEFAULT_LOG_THREADS_COUNT,
+                new RetryInfo(1000, 5000, 5));
     }
 
-    public ReportPortalClient(String baseUrl, String projectName, String accessToken, RetryInfo retry) {
+    public ReportPortalClient(String baseUrl, String projectName, String accessToken, int bufferSize) {
+        this(baseUrl, projectName, accessToken, bufferSize, DEFAULT_LOG_THREADS_COUNT, new RetryInfo(1000, 5000, 5));
+    }
+
+    public ReportPortalClient(String baseUrl, String projectName, String accessToken, int bufferSize, int logThreads) {
+        this(baseUrl, projectName, accessToken, bufferSize, logThreads, new RetryInfo(1000, 5000, 5));
+    }
+
+    public ReportPortalClient(String baseUrl, String projectName, String accessToken, int bufferSize, int logThreads,
+            RetryInfo retry) {
         this.projectName = projectName;
         this.accessToken = accessToken;
         this.baseApiUrl = (baseUrl.endsWith("/")) ? baseUrl + "api/v1" : baseUrl + "/api/v1";
         Retryer retryer = new Retryer.Default(retry.getPeriod(), retry.getMaxPeriod(), retry.getMaxAttempts());
         this.reportPortal = Feign.builder().encoder(new JacksonEncoder()).decoder(new JacksonDecoder())
                 .errorDecoder(new ReportPortalErrorDecoder()).retryer(retryer).target(ReportPortal.class, baseApiUrl);
+        this.bufferSize = bufferSize;
+        this.logThreads = logThreads;
     }
 
     public String startLaunch(StartLaunchRQ rq) throws ReportPortalClientException {
@@ -108,42 +131,58 @@ public class ReportPortalClient {
         String finalParentItemId = (parentItemId != null) ? "/" + parentItemId : "";
         EntryCreatedRS result = reportPortal.startTestItem(accessToken, projectName, finalParentItemId, rq);
         if (allowLogging) {
-            LoggingContext.init(result.getId(), this);
+            LoggingContext.init(result.getId(), bufferSize, this);
+            executor = Executors.newFixedThreadPool(logThreads);
         }
         return result;
     }
 
     public OperationCompletionRS finishTestItem(String itemId, FinishTestItemRQ rq) throws ReportPortalClientException {
         LoggingContext.complete();
+        try {
+            executor.shutdown();
+            executor.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            LOGGER.error("tasks interrupted");
+        } finally {
+            if (!executor.isTerminated()) {
+                executor.shutdownNow();
+            }
+        }
         return reportPortal.finishTestItem(accessToken, projectName, itemId, rq);
     }
 
     public void log(SaveLogRQ rq) throws ReportPortalClientException {
         if (rq.getFile() == null) {
-            reportPortal.log(accessToken, projectName, rq);
+            executor.submit(() -> {
+                reportPortal.log(accessToken, projectName, rq);
+            });
         } else {
             log(Collections.singletonList(rq));
         }
     }
 
     public void log(List<SaveLogRQ> rqs) throws ReportPortalClientException {
-        try {
-            String jsonPart = new ObjectMapper().writeValueAsString(rqs);
-            MultipartBody.Builder reqBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("json_request_part", "", RequestBody.create(JSON, jsonPart));
-            rqs.stream().filter(rq -> rq.getFile() != null).forEach(rq -> reqBuilder.addFormDataPart("binary_part",
-                    rq.getFile().getName(), RequestBody.create(getMediaType(rq), rq.getFile().getContent())));
+        Runnable task = () -> {
+            try {
+                String jsonPart = new ObjectMapper().writeValueAsString(rqs);
+                MultipartBody.Builder reqBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                        .addFormDataPart("json_request_part", "", RequestBody.create(JSON, jsonPart));
+                rqs.stream().filter(rq -> rq.getFile() != null).forEach(rq -> reqBuilder.addFormDataPart("binary_part",
+                        rq.getFile().getName(), RequestBody.create(getMediaType(rq), rq.getFile().getContent())));
 
-            Request request = new Request.Builder().header("Authorization", "bearer " + accessToken)
-                    .url(baseApiUrl + "/" + projectName + "/log").post(reqBuilder.build()).build();
+                Request request = new Request.Builder().header("Authorization", "bearer " + accessToken)
+                        .url(baseApiUrl + "/" + projectName + "/log").post(reqBuilder.build()).build();
 
-            Response response = new OkHttpClient().newCall(request).execute();
-            if (!response.isSuccessful()) {
-                throw new ReportPortalClientException(response.body().string());
+                Response response = new OkHttpClient().newCall(request).execute();
+                if (!response.isSuccessful()) {
+                    LOGGER.error(response.body().string());
+                }
+            } catch (IOException e) {
+                LOGGER.error(e.getMessage(), e);
             }
-        } catch (IOException e) {
-            throw new ReportPortalClientException(e);
-        }
+        };
+        executor.submit(task);
     }
 
     /**
