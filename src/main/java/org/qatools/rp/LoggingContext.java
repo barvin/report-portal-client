@@ -17,6 +17,8 @@
  */
 package org.qatools.rp;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 import org.qatools.rp.exceptions.ReportPortalClientException;
@@ -27,33 +29,46 @@ import com.epam.ta.reportportal.ws.model.log.SaveLogRQ;
 
 public class LoggingContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingContext.class);
+    private static final int DEFAULT_BUFFER_SIZE = 10;
     static final ThreadLocal<LoggingContext> THREAD_LOCAL_CONTEXT = new ThreadLocal<>();
+
+    public static LoggingContext init(String itemId, final ReportPortalClient client) {
+        return init(itemId, DEFAULT_BUFFER_SIZE, client);
+    }
 
     /**
      * Initializes new logging context and attaches it to current thread
      *
      * @param itemId        Test Item ID
+     * @param bufferSize    How many records keep in memory before sending to RP
      * @param client        Client of ReportPortal
      * @return New Logging Context
      */
-    public static LoggingContext init(String itemId, final ReportPortalClient client) {
-        LoggingContext context = new LoggingContext(itemId, client);
+    public static LoggingContext init(String itemId, int bufferSize, final ReportPortalClient client) {
+        LoggingContext context = new LoggingContext(itemId, bufferSize, client);
         THREAD_LOCAL_CONTEXT.set(context);
         return context;
     }
 
     public static void complete() {
         if (THREAD_LOCAL_CONTEXT.get() != null) {
+            if (!THREAD_LOCAL_CONTEXT.get().bufferedLog.isEmpty()) {
+                THREAD_LOCAL_CONTEXT.get().sendLogAndEmptyBuffer();
+            }
             THREAD_LOCAL_CONTEXT.set(null);
         }
     }
 
     private final String itemId;
     private final ReportPortalClient client;
+    private final int bufferSize;
+    private List<SaveLogRQ> bufferedLog;
 
-    private LoggingContext(String itemId, final ReportPortalClient client) {
+    private LoggingContext(String itemId, int bufferSize, final ReportPortalClient client) {
         this.itemId = itemId;
         this.client = client;
+        this.bufferedLog = new ArrayList<>();
+        this.bufferSize = bufferSize;
     }
 
     /**
@@ -62,10 +77,19 @@ public class LoggingContext {
      * @param idToRqFunction    Function that takes in the Test Item ID and produces the log request entity
      */
     public void emit(Function<String, SaveLogRQ> idToRqFunction) {
+        bufferedLog.add(idToRqFunction.apply(itemId));
+        if (bufferedLog.size() >= bufferSize) {
+            sendLogAndEmptyBuffer();
+        }
+    }
+
+    private void sendLogAndEmptyBuffer() {
         try {
-            this.client.log(idToRqFunction.apply(this.itemId));
+            this.client.log(bufferedLog);
         } catch (ReportPortalClientException e) {
             LOGGER.error("Emit log failed.", e);
+        } finally {
+            bufferedLog.clear();
         }
     }
 

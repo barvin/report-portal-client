@@ -122,26 +122,28 @@ public class ReportPortalClient {
         if (rq.getFile() == null) {
             reportPortal.log(accessToken, projectName, rq);
         } else {
-            try {
-                String jsonPart = new ObjectMapper().writeValueAsString(Collections.singletonList(rq));
-                RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
-                        .addFormDataPart("json_request_part", "", RequestBody.create(JSON, jsonPart))
-                        .addFormDataPart("binary_part", rq.getFile().getName(),
-                                RequestBody.create(getMediaType(rq), rq.getFile().getContent()))
-                        .build();
-
-                Request request = new Request.Builder().header("Authorization", "bearer " + accessToken)
-                        .url(baseApiUrl + "/" + projectName + "/log").post(requestBody).build();
-
-                Response response = new OkHttpClient().newCall(request).execute();
-                if (!response.isSuccessful()) {
-                    throw new ReportPortalClientException(response.body().string());
-                }
-            } catch (IOException e) {
-                throw new ReportPortalClientException(e);
-            }
+            log(Collections.singletonList(rq));
         }
+    }
 
+    public void log(List<SaveLogRQ> rqs) throws ReportPortalClientException {
+        try {
+            String jsonPart = new ObjectMapper().writeValueAsString(rqs);
+            MultipartBody.Builder reqBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                    .addFormDataPart("json_request_part", "", RequestBody.create(JSON, jsonPart));
+            rqs.stream().filter(rq -> rq.getFile() != null).forEach(rq -> reqBuilder.addFormDataPart("binary_part",
+                    rq.getFile().getName(), RequestBody.create(getMediaType(rq), rq.getFile().getContent())));
+
+            Request request = new Request.Builder().header("Authorization", "bearer " + accessToken)
+                    .url(baseApiUrl + "/" + projectName + "/log").post(reqBuilder.build()).build();
+
+            Response response = new OkHttpClient().newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new ReportPortalClientException(response.body().string());
+            }
+        } catch (IOException e) {
+            throw new ReportPortalClientException(e);
+        }
     }
 
     /**
