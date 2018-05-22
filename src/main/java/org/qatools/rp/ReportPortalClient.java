@@ -18,7 +18,6 @@
 package org.qatools.rp;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -120,13 +119,22 @@ public class ReportPortalClient {
 
     /**
      * Starts test item on the Report Portal and do not send log messages to it.
-     * If you need the log to be published under the test item, use {@code startTestItem(parentItemId, rq, true)}
+     * Use it for suites or test items that will have children.
+     * If you need the log to be published under the test item, use {@code startTestStepItem(parentItemId, rq)}
      */
     public EntryCreatedRS startTestItem(String parentItemId, StartTestItemRQ rq) throws ReportPortalClientException {
         return startTestItem(parentItemId, rq, false);
     }
 
-    public EntryCreatedRS startTestItem(String parentItemId, StartTestItemRQ rq, boolean allowLogging)
+    /**
+     * Starts test item on the Report Portal with logging enabled.
+     */
+    public EntryCreatedRS startTestStepItem(String parentItemId, StartTestItemRQ rq)
+            throws ReportPortalClientException {
+        return startTestItem(parentItemId, rq, true);
+    }
+
+    private EntryCreatedRS startTestItem(String parentItemId, StartTestItemRQ rq, boolean allowLogging)
             throws ReportPortalClientException {
         String finalParentItemId = (parentItemId != null) ? "/" + parentItemId : "";
         EntryCreatedRS result = reportPortal.startTestItem(accessToken, projectName, finalParentItemId, rq);
@@ -138,41 +146,46 @@ public class ReportPortalClient {
     }
 
     public OperationCompletionRS finishTestItem(String itemId, FinishTestItemRQ rq) throws ReportPortalClientException {
-        LoggingContext.complete();
-        try {
-            executor.shutdown();
-            executor.awaitTermination(5, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            LOGGER.error("tasks interrupted");
-        } finally {
-            if (!executor.isTerminated()) {
-                executor.shutdownNow();
+        if (executor != null) {
+            LoggingContext.complete();
+            try {
+                executor.shutdown();
+                executor.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                LOGGER.error("tasks interrupted");
+            } finally {
+                if (!executor.isTerminated()) {
+                    executor.shutdownNow();
+                }
             }
         }
         return reportPortal.finishTestItem(accessToken, projectName, itemId, rq);
     }
 
     void log(List<SaveLogRQ> rqs) {
-        Runnable task = () -> {
-            try {
-                String jsonPart = new ObjectMapper().writeValueAsString(rqs);
-                MultipartBody.Builder reqBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM)
-                        .addFormDataPart("json_request_part", "", RequestBody.create(JSON, jsonPart));
-                rqs.stream().filter(rq -> rq.getFile() != null).forEach(rq -> reqBuilder.addFormDataPart("binary_part",
-                        rq.getFile().getName(), RequestBody.create(getMediaType(rq), rq.getFile().getContent())));
+        if (executor != null) {
+            Runnable task = () -> {
+                try {
+                    String jsonPart = new ObjectMapper().writeValueAsString(rqs);
+                    MultipartBody.Builder reqBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                            .addFormDataPart("json_request_part", "", RequestBody.create(JSON, jsonPart));
+                    rqs.stream().filter(rq -> rq.getFile() != null)
+                            .forEach(rq -> reqBuilder.addFormDataPart("binary_part", rq.getFile().getName(),
+                                    RequestBody.create(getMediaType(rq), rq.getFile().getContent())));
 
-                Request request = new Request.Builder().header("Authorization", "bearer " + accessToken)
-                        .url(baseApiUrl + "/" + projectName + "/log").post(reqBuilder.build()).build();
+                    Request request = new Request.Builder().header("Authorization", "bearer " + accessToken)
+                            .url(baseApiUrl + "/" + projectName + "/log").post(reqBuilder.build()).build();
 
-                Response response = new OkHttpClient().newCall(request).execute();
-                if (!response.isSuccessful()) {
-                    LOGGER.error(response.body().string());
+                    Response response = new OkHttpClient().newCall(request).execute();
+                    if (!response.isSuccessful()) {
+                        LOGGER.error(response.body().string());
+                    }
+                } catch (IOException e) {
+                    LOGGER.error(e.getMessage(), e);
                 }
-            } catch (IOException e) {
-                LOGGER.error(e.getMessage(), e);
-            }
-        };
-        executor.submit(task);
+            };
+            executor.submit(task);
+        }
     }
 
     /**
@@ -180,13 +193,11 @@ public class ReportPortalClient {
      *
      * @param logSupplier Log supplier. Converts current Item ID to the {@link SaveLogRQ} object
      */
-    public static boolean emitLog(Function<String, SaveLogRQ> logSupplier) {
+    public static void emitLog(Function<String, SaveLogRQ> logSupplier) {
         final LoggingContext loggingContext = LoggingContext.THREAD_LOCAL_CONTEXT.get();
         if (null != loggingContext) {
             loggingContext.emit(logSupplier);
-            return true;
         }
-        return false;
     }
 
     private MediaType getMediaType(SaveLogRQ rq) {

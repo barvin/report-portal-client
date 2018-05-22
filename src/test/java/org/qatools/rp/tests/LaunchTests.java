@@ -96,7 +96,7 @@ public class LaunchTests {
         rq.setStartTime(Calendar.getInstance().getTime());
         rq.setType("STEP");
         rq.setTags(Collections.singleton("qa_tools"));
-        return rpClient.startTestItem(suiteItemId, rq, true).getId();
+        return rpClient.startTestStepItem(suiteItemId, rq).getId();
     }
 
     private String startSuite(String launchId) throws ReportPortalClientException {

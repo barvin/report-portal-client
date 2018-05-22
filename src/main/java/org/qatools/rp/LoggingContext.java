@@ -21,13 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import org.qatools.rp.exceptions.ReportPortalClientException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.epam.ta.reportportal.ws.model.log.SaveLogRQ;
 
-public class LoggingContext {
+class LoggingContext {
     static final ThreadLocal<LoggingContext> THREAD_LOCAL_CONTEXT = new ThreadLocal<>();
 
     /**
@@ -36,15 +32,13 @@ public class LoggingContext {
      * @param itemId        Test Item ID
      * @param bufferSize    How many records keep in memory before sending to RP
      * @param client        Client of ReportPortal
-     * @return New Logging Context
      */
-    public static LoggingContext init(String itemId, int bufferSize, final ReportPortalClient client) {
+    static void init(String itemId, int bufferSize, final ReportPortalClient client) {
         LoggingContext context = new LoggingContext(itemId, bufferSize, client);
         THREAD_LOCAL_CONTEXT.set(context);
-        return context;
     }
 
-    public static void complete() {
+    static void complete() {
         if (THREAD_LOCAL_CONTEXT.get() != null) {
             if (!THREAD_LOCAL_CONTEXT.get().bufferedLog.isEmpty()) {
                 THREAD_LOCAL_CONTEXT.get().sendLogAndEmptyBuffer();
@@ -70,7 +64,7 @@ public class LoggingContext {
      *
      * @param idToRqFunction    Function that takes in the Test Item ID and produces the log request entity
      */
-    public void emit(Function<String, SaveLogRQ> idToRqFunction) {
+    void emit(Function<String, SaveLogRQ> idToRqFunction) {
         bufferedLog.add(idToRqFunction.apply(itemId));
         if (bufferedLog.size() >= bufferSize) {
             sendLogAndEmptyBuffer();

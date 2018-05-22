@@ -48,7 +48,7 @@ public class MimeTypeDetector {
     public static String detect(File file) throws IOException {
         final Metadata metadata = new Metadata();
         metadata.set(Metadata.RESOURCE_NAME_KEY, file.getName());
-        return detect(TikaInputStream.get(file), metadata);
+        return detect(TikaInputStream.get(file.toPath()), metadata);
 
     }
 
