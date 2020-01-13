@@ -42,7 +42,7 @@ bintray {
 }
 
 dependencies {
-    api 'com.epam.reportportal:commons-model:4.0.4'
+    implementation 'io.swagger:swagger-annotations:1.5.0'
     implementation 'io.github.openfeign:feign-core:9.5.1'
     implementation 'io.github.openfeign:feign-jackson:9.5.1'
     implementation 'io.github.openfeign:feign-okhttp:9.5.1'

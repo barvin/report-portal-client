@@ -1,16 +1,23 @@
+/*
+ * Copyright 2019 Maksym Barvinskyi <maksym@mbarvinskyi.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.qatools.rp.tests;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.nio.file.Paths;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.qatools.rp.ReportPortalClient;
+import org.qatools.rp.dto.generated.*;
 import org.qatools.rp.exceptions.ReportPortalClientException;
 import org.qatools.rp.message.HashMarkSeparatedMessageParser;
 import org.qatools.rp.message.MessageParser;
@@ -18,16 +25,13 @@ import org.qatools.rp.message.ReportPortalMessage;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import com.epam.ta.reportportal.ws.model.FinishExecutionRQ;
-import com.epam.ta.reportportal.ws.model.FinishTestItemRQ;
-import com.epam.ta.reportportal.ws.model.StartTestItemRQ;
-import com.epam.ta.reportportal.ws.model.launch.LaunchResource;
-import com.epam.ta.reportportal.ws.model.launch.Mode;
-import com.epam.ta.reportportal.ws.model.launch.StartLaunchRQ;
-import com.epam.ta.reportportal.ws.model.log.SaveLogRQ;
-
 import sun.misc.IOUtils;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
+import java.util.*;
 
 public class LaunchTests {
     private ReportPortalClient rpClient;
@@ -53,9 +57,9 @@ public class LaunchTests {
         ReportPortalClient.emitLog(itemId -> {
             SaveLogRQ rq = new SaveLogRQ();
             rq.setMessage("Test log message");
-            rq.setLogTime(Calendar.getInstance().getTime());
-            rq.setTestItemId(itemId);
-            rq.setLevel("INFO");
+            rq.setTime(Calendar.getInstance().getTime());
+            rq.setItemId(itemId);
+            rq.setLevel(SaveLogRQ.LevelEnum.INFO);
             return rq;
         });
     }
@@ -64,9 +68,9 @@ public class LaunchTests {
         ReportPortalClient.emitLog(itemId -> {
             SaveLogRQ rq = new SaveLogRQ();
             rq.setMessage("Test log message with screen shot");
-            rq.setLogTime(Calendar.getInstance().getTime());
-            rq.setTestItemId(testItemId);
-            rq.setLevel("INFO");
+            rq.setTime(Calendar.getInstance().getTime());
+            rq.setItemId(testItemId);
+            rq.setLevel(SaveLogRQ.LevelEnum.INFO);
             SaveLogRQ.File file = new SaveLogRQ.File();
             file.setName("screen_shot_1.png");
             try {
@@ -84,7 +88,7 @@ public class LaunchTests {
     private void finishTestItem(String itemId) throws ReportPortalClientException {
         FinishTestItemRQ rq = new FinishTestItemRQ();
         rq.setEndTime(Calendar.getInstance().getTime());
-        rq.setStatus("PASSED");
+        rq.setStatus(FinishTestItemRQ.StatusEnum.PASSED);
         rpClient.finishTestItem(itemId, rq);
     }
 
@@ -94,8 +98,8 @@ public class LaunchTests {
         rq.setName("Some test");
         rq.setDescription("Great description");
         rq.setStartTime(Calendar.getInstance().getTime());
-        rq.setType("STEP");
-        rq.setTags(Collections.singleton("qa_tools"));
+        rq.setType(StartTestItemRQ.TypeEnum.STEP);
+        rq.setTags(Collections.singletonList("qa_tools"));
         return rpClient.startTestStepItem(suiteItemId, rq).getId();
     }
 
@@ -104,7 +108,7 @@ public class LaunchTests {
         rq.setLaunchId(launchId);
         rq.setName("Suite");
         rq.setStartTime(Calendar.getInstance().getTime());
-        rq.setType("SUITE");
+        rq.setType(StartTestItemRQ.TypeEnum.SUITE);
         return rpClient.startRootTestItem(rq).getId();
     }
 
@@ -116,7 +120,7 @@ public class LaunchTests {
 
     private String startLaunch() throws ReportPortalClientException {
         StartLaunchRQ startRq = new StartLaunchRQ();
-        startRq.setMode(Mode.DEFAULT);
+        startRq.setMode(StartLaunchRQ.ModeEnum.DEFAULT);
         startRq.setName("Test_Launch");
         startRq.setStartTime(Calendar.getInstance().getTime());
         return rpClient.startLaunch(startRq);
@@ -131,8 +135,8 @@ public class LaunchTests {
         List<LaunchResource> launches = rpClient.getLaunches(parameters);
         assert launches.size() == 2;
 
-        LaunchResource launch = rpClient.getLaunch(launches.get(0).getLaunchId());
-        assert launch.getLaunchId().equals(launches.get(0).getLaunchId());
+        LaunchResource launch = rpClient.getLaunch(launches.get(0).getId());
+        assert launch.getId().equals(launches.get(0).getId());
     }
 
     @Test
