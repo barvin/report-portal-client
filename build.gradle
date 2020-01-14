@@ -36,6 +36,7 @@ bintray {
             name = releaseVersion
             desc = 'Report Portal client '.concat(releaseVersion)
             released  = new Date()
+            licenses = ['Apache-2.0']
             vcsTag = 'v'.concat(releaseVersion)
         }
     }
