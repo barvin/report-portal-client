@@ -40,7 +40,7 @@ def pomConfig = {
     }
     developers {
         developer {
-            id "maksym.barvinskyi"
+            id "mbarvinskyi"
             name "Maksym Barvinskyi"
             email "maksym@mbarvinskyi.com"
         }
@@ -61,7 +61,7 @@ publishing {
             artifact javadocJar {
                 archiveClassifier.set("javadoc")
             }
-            groupId group
+            groupId "io.github.barvin"
             artifactId project.name
             version releaseVersion
             pom.withXml {
