@@ -96,7 +96,7 @@ bintray {
                 sign = true
             }
             mavenCentralSync {
-                sync = false
+                sync = true
                 user = project.hasProperty('sonatype.token') ? project.property('sonatype.token') : ''
                 password = project.hasProperty('sonatype.password') ? project.property('sonatype.password') : ''
                 close = '1'
@@ -112,11 +112,11 @@ dependencies {
     implementation 'io.github.openfeign:feign-okhttp:9.5.1'
     implementation 'com.fasterxml.jackson.core:jackson-core:2.9.3'
     implementation 'org.slf4j:slf4j-api:1.7.25'
-    implementation 'ch.qos.logback:logback-classic:1.2.3'
-    implementation 'org.codehaus.groovy:groovy-all:2.4.13'
     implementation 'com.google.guava:guava:23.0'
     implementation 'org.apache.tika:tika-core:1.18'
     testCompile 'org.testng:testng:6.11'
+    testCompile 'ch.qos.logback:logback-classic:1.2.3'
+    testCompile 'org.codehaus.groovy:groovy-all:2.4.13'
 }
 
 test {
