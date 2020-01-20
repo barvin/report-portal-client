@@ -16,7 +16,7 @@ package org.qatools.rp.dto.generated;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 
-import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,7 +33,7 @@ public class ProjectResource {
   private ProjectConfiguration _configuration = null;
 
   @JsonProperty("creationDate")
-  private OffsetDateTime creationDate = null;
+  private Date creationDate = null;
 
   @JsonProperty("customer")
   private String customer = null;
@@ -80,7 +80,7 @@ public class ProjectResource {
     this._configuration = _configuration;
   }
 
-  public ProjectResource creationDate(OffsetDateTime creationDate) {
+  public ProjectResource creationDate(Date creationDate) {
     this.creationDate = creationDate;
     return this;
   }
@@ -90,11 +90,11 @@ public class ProjectResource {
    * @return creationDate
   **/
   @ApiModelProperty(value = "")
-  public OffsetDateTime getCreationDate() {
+  public Date getCreationDate() {
     return creationDate;
   }
 
-  public void setCreationDate(OffsetDateTime creationDate) {
+  public void setCreationDate(Date creationDate) {
     this.creationDate = creationDate;
   }
 

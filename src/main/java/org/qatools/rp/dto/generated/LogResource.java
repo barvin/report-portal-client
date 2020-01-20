@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.annotations.ApiModelProperty;
 
-import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.Objects;
 
 /**
@@ -90,7 +90,7 @@ public class LogResource {
   private String thumbnail = null;
 
   @JsonProperty("time")
-  private OffsetDateTime time = null;
+  private Date time = null;
 
   public LogResource binaryContent(BinaryContent binaryContent) {
     this.binaryContent = binaryContent;
@@ -200,7 +200,7 @@ public class LogResource {
     this.thumbnail = thumbnail;
   }
 
-  public LogResource time(OffsetDateTime time) {
+  public LogResource time(Date time) {
     this.time = time;
     return this;
   }
@@ -210,11 +210,11 @@ public class LogResource {
    * @return time
   **/
   @ApiModelProperty(value = "")
-  public OffsetDateTime getTime() {
+  public Date getTime() {
     return time;
   }
 
-  public void setTime(OffsetDateTime time) {
+  public void setTime(Date time) {
     this.time = time;
   }
 

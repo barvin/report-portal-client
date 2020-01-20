@@ -16,7 +16,7 @@ package org.qatools.rp.dto.generated;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 
-import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -36,7 +36,7 @@ public class ActivityResource {
   private List<FieldValues> history = null;
 
   @JsonProperty("lastModifiedDate")
-  private OffsetDateTime lastModifiedDate = null;
+  private Date lastModifiedDate = null;
 
   @JsonProperty("loggedObjectRef")
   private String loggedObjectRef = null;
@@ -115,7 +115,7 @@ public class ActivityResource {
     this.history = history;
   }
 
-  public ActivityResource lastModifiedDate(OffsetDateTime lastModifiedDate) {
+  public ActivityResource lastModifiedDate(Date lastModifiedDate) {
     this.lastModifiedDate = lastModifiedDate;
     return this;
   }
@@ -125,11 +125,11 @@ public class ActivityResource {
    * @return lastModifiedDate
   **/
   @ApiModelProperty(required = true, value = "")
-  public OffsetDateTime getLastModifiedDate() {
+  public Date getLastModifiedDate() {
     return lastModifiedDate;
   }
 
-  public void setLastModifiedDate(OffsetDateTime lastModifiedDate) {
+  public void setLastModifiedDate(Date lastModifiedDate) {
     this.lastModifiedDate = lastModifiedDate;
   }
 

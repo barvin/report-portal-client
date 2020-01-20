@@ -15,7 +15,6 @@ package org.qatools.rp.dto.generated;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -27,7 +26,7 @@ public class TestItemResource {
   private String description = null;
 
   @JsonProperty("end_time")
-  private OffsetDateTime endTime = null;
+  private Date endTime = null;
 
   @JsonProperty("has_childs")
   private Boolean hasChilds = null;
@@ -60,7 +59,7 @@ public class TestItemResource {
   private List<TestItemResource> retries = null;
 
   @JsonProperty("start_time")
-  private OffsetDateTime startTime = null;
+  private Date startTime = null;
 
   @JsonProperty("statistics")
   private Statistics statistics = null;
@@ -94,7 +93,7 @@ public class TestItemResource {
     this.description = description;
   }
 
-  public TestItemResource endTime(OffsetDateTime endTime) {
+  public TestItemResource endTime(Date endTime) {
     this.endTime = endTime;
     return this;
   }
@@ -103,11 +102,11 @@ public class TestItemResource {
    * Get endTime
    * @return endTime
   **/
-  public OffsetDateTime getEndTime() {
+  public Date getEndTime() {
     return endTime;
   }
 
-  public void setEndTime(OffsetDateTime endTime) {
+  public void setEndTime(Date endTime) {
     this.endTime = endTime;
   }
 
@@ -305,7 +304,7 @@ public class TestItemResource {
     this.retries = retries;
   }
 
-  public TestItemResource startTime(OffsetDateTime startTime) {
+  public TestItemResource startTime(Date startTime) {
     this.startTime = startTime;
     return this;
   }
@@ -314,11 +313,11 @@ public class TestItemResource {
    * Get startTime
    * @return startTime
   **/
-  public OffsetDateTime getStartTime() {
+  public Date getStartTime() {
     return startTime;
   }
 
-  public void setStartTime(OffsetDateTime startTime) {
+  public void setStartTime(Date startTime) {
     this.startTime = startTime;
   }
 

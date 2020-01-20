@@ -16,7 +16,7 @@ package org.qatools.rp.dto.generated;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 
-import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -42,7 +42,7 @@ public class UserResource {
   private String fullName = null;
 
   @JsonProperty("last_login")
-  private OffsetDateTime lastLogin = null;
+  private Date lastLogin = null;
 
   @JsonProperty("photoId")
   private String photoId = null;
@@ -154,7 +154,7 @@ public class UserResource {
     this.fullName = fullName;
   }
 
-  public UserResource lastLogin(OffsetDateTime lastLogin) {
+  public UserResource lastLogin(Date lastLogin) {
     this.lastLogin = lastLogin;
     return this;
   }
@@ -164,11 +164,11 @@ public class UserResource {
    * @return lastLogin
   **/
   @ApiModelProperty(value = "")
-  public OffsetDateTime getLastLogin() {
+  public Date getLastLogin() {
     return lastLogin;
   }
 
-  public void setLastLogin(OffsetDateTime lastLogin) {
+  public void setLastLogin(Date lastLogin) {
     this.lastLogin = lastLogin;
   }
 

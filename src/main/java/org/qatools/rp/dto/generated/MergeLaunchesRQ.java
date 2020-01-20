@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.annotations.ApiModelProperty;
 
-import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -32,7 +32,7 @@ public class MergeLaunchesRQ {
   private String description = null;
 
   @JsonProperty("end_time")
-  private OffsetDateTime endTime = null;
+  private Date endTime = null;
 
   @JsonProperty("extendSuitesDescription")
   private Boolean extendSuitesDescription = null;
@@ -120,7 +120,7 @@ public class MergeLaunchesRQ {
   private String name = null;
 
   @JsonProperty("start_time")
-  private OffsetDateTime startTime = null;
+  private Date startTime = null;
 
   @JsonProperty("tags")
   private List<String> tags = null;
@@ -143,7 +143,7 @@ public class MergeLaunchesRQ {
     this.description = description;
   }
 
-  public MergeLaunchesRQ endTime(OffsetDateTime endTime) {
+  public MergeLaunchesRQ endTime(Date endTime) {
     this.endTime = endTime;
     return this;
   }
@@ -153,11 +153,11 @@ public class MergeLaunchesRQ {
    * @return endTime
   **/
   @ApiModelProperty(value = "")
-  public OffsetDateTime getEndTime() {
+  public Date getEndTime() {
     return endTime;
   }
 
-  public void setEndTime(OffsetDateTime endTime) {
+  public void setEndTime(Date endTime) {
     this.endTime = endTime;
   }
 
@@ -256,7 +256,7 @@ public class MergeLaunchesRQ {
     this.name = name;
   }
 
-  public MergeLaunchesRQ startTime(OffsetDateTime startTime) {
+  public MergeLaunchesRQ startTime(Date startTime) {
     this.startTime = startTime;
     return this;
   }
@@ -266,11 +266,11 @@ public class MergeLaunchesRQ {
    * @return startTime
   **/
   @ApiModelProperty(value = "")
-  public OffsetDateTime getStartTime() {
+  public Date getStartTime() {
     return startTime;
   }
 
-  public void setStartTime(OffsetDateTime startTime) {
+  public void setStartTime(Date startTime) {
     this.startTime = startTime;
   }
 
